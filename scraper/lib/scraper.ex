@@ -11,10 +11,10 @@ defmodule Scraper do
   end
 
   def titles(url) do
-    send :scraper, {self, url}
-    pid = Process.whereis :scraper
+    ref = make_ref
+    send :scraper, {self, ref, url}
     receive do
-      {^pid, titles} -> {:ok, titles}
+      {^ref, titles} -> {:ok, titles}
     after
       3_000 -> {:error, :timeout}
     end
@@ -24,8 +24,8 @@ defmodule Scraper do
 
   def loop do
     receive do
-      {from, url} ->
-        send from, {self, fetch_titles(url)}
+      {from, ref, url} ->
+        send from, {ref, fetch_titles(url)}
 
       _ ->
         IO.puts "Message not understood :("
