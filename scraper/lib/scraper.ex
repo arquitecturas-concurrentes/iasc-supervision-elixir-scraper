@@ -6,8 +6,13 @@ defmodule Scraper do
     spawn __MODULE__, :loop, []
   end
 
-  def titles(pid, url) do
-    send pid, {self, url}
+  def start_link do
+    spawn_link __MODULE__, :loop, []
+  end
+
+  def titles(url) do
+    send :scraper, {self, url}
+    pid = Process.whereis :scraper
     receive do
       {^pid, titles} -> {:ok, titles}
     after
