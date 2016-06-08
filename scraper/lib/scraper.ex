@@ -11,12 +11,22 @@ defmodule Scraper do
   end
 
   def titles(url) do
-    ref = make_ref
-    send :scraper, {self, ref, url}
+    msg_ref = make_ref
+    monitor_ref = Process.monitor :scraper
+
+    send :scraper, {self, msg_ref, url}
     receive do
-      {^ref, titles} -> {:ok, titles}
+      {^msg_ref, titles} ->
+        Process.demonitor monitor_ref
+        {:ok, titles}
+
+      {:DOWN, ^monitor_ref, :process, _, reason} ->
+        {:error, reason}
+
     after
-      3_000 -> {:error, :timeout}
+      3_000 ->
+        Process.demonitor monitor_ref
+        {:error, :timeout}
     end
   end
 
