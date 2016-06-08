@@ -6,6 +6,15 @@ defmodule Scraper do
     spawn __MODULE__, :loop, []
   end
 
+  def titles(pid, url) do
+    send pid, {self, url}
+    receive do
+      {^pid, titles} -> {:ok, titles}
+    after
+      3_000 -> {:error, :timeout}
+    end
+  end
+
   # ------- Private
 
   def loop do
